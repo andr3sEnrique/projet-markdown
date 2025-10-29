@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { Button, Form } from 'react-bootstrap';
 import { addImage } from '../../features/imagesSlice';
+import { v4 as uuidv4 } from 'uuid';
 
 function ImageUploader() {
     const dispatch = useDispatch();
@@ -19,7 +20,8 @@ function ImageUploader() {
             reader.onload = (event) => {
                 const base64 = event.target.result;
                 const name = file.name;
-                dispatch(addImage({ name, base64 }));
+                const id = uuidv4();
+                dispatch(addImage({ id, name, base64 }));
             };
 
             reader.readAsDataURL(file);

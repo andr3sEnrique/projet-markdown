@@ -10,7 +10,9 @@ import {
     useSensors
 } from '@dnd-kit/core';
 import Swal from 'sweetalert2'
+import { addImage } from '../../features/imagesSlice';
 import ShowToast from "../utils/ShowToast.jsx";
+import { v4 as uuidv4 } from 'uuid';
 
 function FileTree() {
     const tree = useSelector((state) => state.files.tree);
@@ -83,12 +85,28 @@ function FileTree() {
         if (!file) return;
         const reader = new FileReader();
         reader.onload = (e) => {
-            const content = e.target.result;
+            let content = e.target.result;
             const name = file.name;
 
             const parentId = getParentId(selectedId);
 
-            dispatch(createEntry({ name, isFolder: false, parentId, content }));
+            const regex = /!\[(.*?)]\((data:image\/.*?;base64,.*?)\)/g;
+            const imagesToAdd = [];
+            const processedContent = content.replace(regex, (match, alt, base64) => {
+
+                const newId = uuidv4();
+                const newName = alt || `Imported Image ${newId.substring(0, 4)}`;
+
+                imagesToAdd.push({ id: newId, name: newName, base64: base64 });
+
+                return `![${alt}](@img/${newId})`;
+            });
+
+            imagesToAdd.forEach(img => {
+                dispatch(addImage(img));
+            });
+
+            dispatch(createEntry({ name, isFolder: false, parentId, content: processedContent }));
         };
         reader.readAsText(file);
 
