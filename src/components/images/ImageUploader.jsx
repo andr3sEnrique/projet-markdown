@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { Button, Form } from 'react-bootstrap';
 import { addImage } from '../../features/imagesSlice';
@@ -6,12 +6,14 @@ import { addImage } from '../../features/imagesSlice';
 function ImageUploader() {
     const dispatch = useDispatch();
     const fileInputRef = useRef(null);
+    const [isDragging, setIsDragging] = useState(false);
 
-    const handleFileChange = (e) => {
-        const files = e.target.files;
-        if (!files) return;
+    const processFiles = (files) => {
+        if (!files || files.length === 0) return;
 
         Array.from(files).forEach(file => {
+            if (!file.type.startsWith('image/')) return;
+
             const reader = new FileReader();
 
             reader.onload = (event) => {
@@ -22,7 +24,10 @@ function ImageUploader() {
 
             reader.readAsDataURL(file);
         });
+    };
 
+    const handleFileChange = (e) => {
+        processFiles(e.target.files);
         e.target.value = null;
     };
 
@@ -30,8 +35,46 @@ function ImageUploader() {
         fileInputRef.current.click();
     };
 
+    const handleDragEnter = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragging(true);
+    };
+
+    const handleDragOver = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+    };
+
+    const handleDragLeave = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragging(false);
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragging(false);
+
+        const files = e.dataTransfer.files;
+        processFiles(files);
+    };
+
     return (
-        <div className="p-3 mb-3" style={{ border: '2px dashed #ccc', borderRadius: '5px' }}>
+        <div 
+            className="p-3 mb-3" 
+            style={{ 
+                border: `2px dashed ${isDragging ? '#0d6efd' : '#ccc'}`, 
+                borderRadius: '5px',
+                backgroundColor: isDragging ? '#f0f8ff' : 'transparent',
+                transition: 'all 0.3s ease'
+            }}
+            onDragEnter={handleDragEnter}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+        >
             <Button onClick={handleClick}>
                 Import Images (Click)
             </Button>
@@ -45,6 +88,11 @@ function ImageUploader() {
             >
             </Form.Control>
             <p className="mt-2 text-muted">
+                {isDragging 
+                    ? '📁 Drop images here...' 
+                    : '📤 Click the button or drag & drop images here'}
+            </p>
+            <p className="text-muted small mb-0">
                 The images will be converted to Base64 and saved in the browser.
             </p>
         </div>

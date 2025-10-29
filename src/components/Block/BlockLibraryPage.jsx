@@ -1,53 +1,49 @@
-// src/pages/BlockLibraryPage.jsx
-
 import { useState, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Container, Row, Col, Form, Button, Card, ListGroup, ButtonGroup } from "react-bootstrap";
 import { addBlock, updateBlock, deleteBlock, importBlocks } from "../../features/blocksSlice";
-
-const downloadJson = (filename, jsonData) => {
-  const content = JSON.stringify(jsonData, null, 2); // Formatea el JSON
-  const element = document.createElement("a");
-  const file = new Blob([content], { type: "application/json" });
-  element.href = URL.createObjectURL(file);
-  element.download = filename;
-  document.body.appendChild(element);
-  element.click();
-  document.body.removeChild(element);
-};
+import {handleExportAll, handleExportOne} from "../utils/exportFile.js";
+import Swal from "sweetalert2";
+import ShowToast from "../utils/ShowToast.jsx";
 
 function BlockLibraryPage() {
   const dispatch = useDispatch();
   const blocks = useSelector((state) => state.blocks.items);
   const blockList = Object.values(blocks);
-  const fileInputRef = useRef(null); // Ref para el input de importación
-
-  // Estados del formulario
+  const fileInputRef = useRef(null);
+  const [toast, setToast] = useState({ show: false, message: '', variant: 'success' });
   const [name, setName] = useState("");
   const [content, setContent] = useState("");
   const [shortcut, setShortcut] = useState("");
-  const [editingId, setEditingId] = useState(null); // ID del bloque que estamos editando
+  const [editingId, setEditingId] = useState(null);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!name || !content) {
-      alert("El nombre y el contenido son obligatorios.");
+      Swal.fire({
+        icon: 'error',
+        title: 'Oops...',
+        text: 'Name and content are required. Please fill them and try again.',
+        footer: '<a href>Why do I have this issue?</a>'
+      });
       return;
     }
 
     if (editingId) {
-      // Estamos actualizando un bloque existente
       dispatch(updateBlock({ id: editingId, name, content, shortcut }));
     } else {
-      // Estamos creando un nuevo bloque
       dispatch(addBlock({ name, content, shortcut }));
     }
 
-    // Limpiar formulario
+    setToast({
+      show: true,
+      message: `Block crated or updated ✅`,
+      variant: 'success',
+    });
+
     handleClear();
   };
 
-  // Cargar un bloque en el formulario para editarlo
   const handleEdit = (block) => {
     setEditingId(block.id);
     setName(block.name);
@@ -55,7 +51,6 @@ function BlockLibraryPage() {
     setShortcut(block.shortcut);
   };
 
-  // Limpiar el formulario y salir del modo edición
   const handleClear = () => {
     setEditingId(null);
     setName("");
@@ -63,51 +58,48 @@ function BlockLibraryPage() {
     setShortcut("");
   };
 
-  const handleDelete = (id) => {
-    if (window.confirm("¿Seguro que quieres borrar este bloque?")) {
+  const handleDelete = async(id) => {
+    const result = await Swal.fire({
+      title: `¿Are you sure you want to delete this block ?`,
+      text: "¡You cannot undo this!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Delete',
+      cancelButtonText: 'Cancel',
+    });
+    if (result.isConfirmed) {
       dispatch(deleteBlock({ id }));
+      setToast({
+        show: true,
+        message: `Block deleted ✅`,
+        variant: 'success',
+      });
       if (id === editingId) {
-        handleClear(); // Si estábamos editando el bloque borrado
+        handleClear();
       }
     }
   };
 
   const handleShortcutKeyDown = (event) => {
-    // 1. Prevenir que el navegador ejecute el atajo (ej. 'Ctrl+S' de guardar)
     event.preventDefault();
 
-    // 2. Construir la cadena del atajo
     let shortcutString = "";
 
     if (event.ctrlKey) shortcutString += "Ctrl+";
     if (event.altKey) shortcutString += "Alt+";
     if (event.shiftKey) shortcutString += "Shift+";
-    if (event.metaKey) shortcutString += "Meta+"; // Para la tecla Cmd en Mac
+    if (event.metaKey) shortcutString += "Meta+";
 
-    // 3. Añadir la tecla principal (ej. 'B', '1', 'S')
-    // Nos aseguramos de no añadir las teclas modificadoras como la tecla principal
     const key = event.key.toLowerCase();
     if (key !== "control" && key !== "alt" && key !== "shift" && key !== "meta") {
-      // Usamos event.code para obtener 'KeyB' en lugar de 'b' o 'shift+b'
-      // O usamos event.key para algo simple. Usemos event.key por ahora.
       shortcutString += event.key.toUpperCase();
     }
 
-    // 4. Actualizar el estado
     setShortcut(shortcutString);
   };
 
-  const handleExportAll = () => {
-    downloadJson("todos-los-bloques.parts.mdlc", blocks); // Exporta el objeto 'items'
-  };
-
-  const handleExportOne = (block) => {
-    downloadJson(`${block.name}.part.mdlc`, block); // Exporta solo el objeto de bloque
-  };
-
-  // --- LÓGICA DE IMPORTACIÓN ---
   const handleImportClick = () => {
-    fileInputRef.current.click(); // Dispara el input oculto
+    fileInputRef.current.click();
   };
 
   const handleImportFile = (event) => {
@@ -120,108 +112,120 @@ function BlockLibraryPage() {
         const data = JSON.parse(e.target.result);
 
         if (file.name.endsWith(".parts.mdlc")) {
-          // Es una lista (nuestro formato 'items')
-          // Usamos 'importBlocks' para fusionar
           dispatch(importBlocks(data));
         } else if (file.name.endsWith(".part.mdlc")) {
-          // Es un solo bloque
-          // Usamos 'addBlock' (creará uno nuevo con nuevo ID)
           dispatch(
             addBlock({
-              name: data.name || "Importado",
+              name: data.name || "Imported",
               content: data.content || "",
               shortcut: data.shortcut || "",
             })
           );
         } else {
-          alert("Formato de archivo no reconocido. Use .part.mdlc o .parts.mdlc");
+          setToast({
+            show: true,
+            message: `Format not recognized. Use .part.mdlc or .parts.mdlc`,
+            variant: 'warning',
+          });
         }
       } catch (err) {
         console.error("Error al importar el archivo", err);
-        alert("El archivo está corrupto o no es un JSON válido.");
+        setToast({
+          show: true,
+          message: "File is corrupted or not a valid JSON.",
+          variant: 'error'
+        })
       }
+      setToast({
+        show: true,
+        message: `File imported ✅`,
+        variant: 'success',
+      });
     };
     reader.readAsText(file);
-    event.target.value = null; // Limpiar el input
+    event.target.value = null;
   };
 
   return (
-    <Container className="mt-4">
-      <Row>
-        {/* Columna 1: Formulario de Creación/Edición */}
-        <Col md={5}>
-          <Card>
-            <Card.Header>
-              <h4>{editingId ? "Editar Bloque" : "Crear Nuevo Bloque"}</h4>
-            </Card.Header>
-            <Card.Body>
-              <Form onSubmit={handleSubmit}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Nombre del Bloque</Form.Label>
-                  <Form.Control type="text" placeholder="Ej: Alerta Info" value={name} onChange={(e) => setName(e.target.value)} required />
-                </Form.Group>
+    <>
+      <Container className="mt-4">
+        <Row>
+          <Col md={5}>
+            <Card>
+              <Card.Header>
+                <h4>{editingId ? "Edit Block" : "Create new Block"}</h4>
+              </Card.Header>
+              <Card.Body>
+                <Form onSubmit={handleSubmit}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Block name</Form.Label>
+                    <Form.Control type="text" placeholder="Ej: Alerta Info" value={name} onChange={(e) => setName(e.target.value)} required />
+                  </Form.Group>
 
-                <Form.Group className="mb-3">
-                  <Form.Label>Contenido (HTML/Markdown)</Form.Label>
-                  <Form.Control as="textarea" rows={6} placeholder="<div class='alert alert-info'>...</div>" value={content} onChange={(e) => setContent(e.target.value)} required />
-                </Form.Group>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Content (HTML/Markdown)</Form.Label>
+                    <Form.Control as="textarea" rows={6} placeholder="<div class='alert alert-info'>...</div>" value={content} onChange={(e) => setContent(e.target.value)} required />
+                  </Form.Group>
 
-                <Form.Group className="mb-3">
-                  <Form.Label>Atajo de Teclado</Form.Label>
-                  <Form.Control type="text" placeholder="Ej: Ctrl+1" value={shortcut} onChange={(e) => setShortcut(e.target.value)} onKeyDown={handleShortcutKeyDown} />
-                  <Form.Text>Define un atajo (ej: Ctrl+1, Alt+B). Aún no se valida.</Form.Text>
-                </Form.Group>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Shortcut</Form.Label>
+                    <Form.Control type="text" placeholder="Ej: Ctrl+1" value={shortcut} onChange={(e) => setShortcut(e.target.value)} onKeyDown={handleShortcutKeyDown} />
+                    <Form.Text>Define a shortcut (ej: Ctrl+1, Alt+B)</Form.Text>
+                  </Form.Group>
 
-                <Button variant="primary" type="submit">
-                  {editingId ? "Actualizar Bloque" : "Guardar Bloque"}
-                </Button>
-                {editingId && (
-                  <Button variant="secondary" onClick={handleClear} className="ms-2">
-                    Cancelar Edición
+                  <Button variant="primary" type="submit">
+                    {editingId ? "Update Block" : "Save Block"}
                   </Button>
-                )}
-              </Form>
-            </Card.Body>
-          </Card>
-        </Col>
+                  {editingId && (
+                      <Button variant="secondary" onClick={handleClear} className="ms-2">
+                        Cancel
+                      </Button>
+                  )}
+                </Form>
+              </Card.Body>
+            </Card>
+          </Col>
 
-        {/* Columna 2: Lista de Bloques */}
-        <Col md={7}>
-          <h4>Bloques Guardados</h4>
-          <ButtonGroup>
-            <Button variant="success" size="sm" onClick={handleImportClick}>
-              Importar
-            </Button>
-            <Button variant="primary" size="sm" onClick={handleExportAll}>
-              Exportar Todo
-            </Button>
-          </ButtonGroup>
-          {/* Input oculto */}
-          <input type="file" ref={fileInputRef} onChange={handleImportFile} accept=".mdlc" style={{ display: "none" }} />
-          <ListGroup>
-            {blockList.length > 0 ? (
-              blockList.map((block) => (
-                <ListGroup.Item key={block.id}>
-                  <h5>{block.name}</h5>
-                  <pre style={{ fontSize: "0.8rem", maxHeight: "50px", overflow: "hidden" }}>{block.content}</pre>
-                  <p className="mb-1">
-                    <strong>Atajo:</strong> {block.shortcut || "Ninguno"}
-                  </p>
-                  <Button variant="outline-primary" size="sm" onClick={() => handleEdit(block)}>
-                    Editar
-                  </Button>{" "}
-                  <Button variant="outline-danger" size="sm" onClick={() => handleDelete(block.id)}>
-                    Eliminar
-                  </Button>
-                </ListGroup.Item>
-              ))
-            ) : (
-              <p>No hay bloques personalizados.</p>
-            )}
-          </ListGroup>
-        </Col>
-      </Row>
-    </Container>
+          <Col md={7}>
+            <h4>Saved Blocks</h4>
+            <ButtonGroup>
+              <Button variant="success" className="me-1" size="sm" onClick={handleImportClick}>
+                Import
+              </Button>
+              <Button variant="primary" size="sm" onClick={() => handleExportAll(blocks)}>
+                Export All
+              </Button>
+            </ButtonGroup>
+            <input type="file" ref={fileInputRef} onChange={handleImportFile} accept=".mdlc" style={{ display: "none" }} />
+            <ListGroup>
+              {blockList.length > 0 ? (
+                  blockList.map((block) => (
+                      <ListGroup.Item key={block.id}>
+                        <h5>{block.name}</h5>
+                        <pre style={{ fontSize: "0.8rem", maxHeight: "50px", overflow: "hidden" }}>{block.content}</pre>
+                        <p className="mb-1">
+                          <strong>Shortcut:</strong> {block.shortcut || "None"}
+                        </p>
+                        <Button variant="outline-primary" className="me-1" size="sm" onClick={() => handleEdit(block)}>
+                          Edit
+                        </Button>
+                        <Button variant="outline-danger" className="me-1" size="sm" onClick={async() => await handleDelete(block.id)}>
+                          Delete
+                        </Button>
+                        <Button variant="info" size="sm" onClick={() => handleExportOne(block)}>
+                          Export
+                        </Button>
+                      </ListGroup.Item>
+                  ))
+              ) : (
+                  <p>There are no custom blocks.</p>
+              )}
+            </ListGroup>
+          </Col>
+        </Row>
+      </Container>
+      <ShowToast setToast={setToast} toast={toast}/>
+    </>
   );
 }
 

@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { ListGroup, Button, Form, InputGroup, Collapse } from 'react-bootstrap';
 import { setCurrentFile, deleteEntry, renameEntry } from '../../features/filesSlice.js';
 import {useDnd} from "./hooks/dndHook.js";
+import Swal from "sweetalert2";
 
 function FileTreeItem({ entryId, selectedId, setSelectedId }) {
     const dispatch = useDispatch();
@@ -26,9 +27,18 @@ function FileTreeItem({ entryId, selectedId, setSelectedId }) {
         }
     };
 
-    const handleDelete = (e) => {
+    const handleDelete = async(e) => {
         e.stopPropagation();
-        if (window.confirm(`¿Are you sure you want to delete "${entry.name}"?`)) {
+        const result = await Swal.fire({
+            title: `¿Are you sure you want to delete "${entry.name}"?`,
+            text: "¡You cannot undo this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Delete',
+            cancelButtonText: 'Cancel',
+        });
+
+        if (result.isConfirmed) {
             dispatch(deleteEntry({ entryId: entry.id }));
         }
     };
@@ -82,7 +92,7 @@ function FileTreeItem({ entryId, selectedId, setSelectedId }) {
                         {entry.id !== 'root' && (
                             <div onClick={(e) => e.stopPropagation()}>
                                 <Button variant="outline-primary" className="ms-1" size="sm" onClick={handleRename}>✏️</Button>{' '}
-                                <Button variant="outline-danger" size="sm" onClick={handleDelete}>🗑️</Button>
+                                <Button variant="outline-danger" size="sm" onClick={async(e) => handleDelete(e)}>🗑️</Button>
                             </div>
                         )}
                     </>

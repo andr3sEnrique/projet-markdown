@@ -10,12 +10,15 @@ import {
     useSensors
 } from '@dnd-kit/core';
 import Swal from 'sweetalert2'
+import ShowToast from "../utils/ShowToast.jsx";
 
 function FileTree() {
     const tree = useSelector((state) => state.files.tree);
     const dispatch = useDispatch();
     const [selectedId, setSelectedId] = useState('root');
     const fileInputRef = useRef(null);
+    const [toast, setToast] = useState({ show: false, message: '', variant: 'success' });
+
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -44,6 +47,11 @@ function FileTree() {
 
         if (name) {
             dispatch(createEntry({ name, isFolder, parentId }));
+            setToast({
+                show: true,
+                message: `${isFolder ? 'Folder' : 'File'} created ✅`,
+                variant: 'success',
+            });
         }
     };
 
@@ -85,6 +93,11 @@ function FileTree() {
         reader.readAsText(file);
 
         e.target.value = null;
+        setToast({
+            show: true,
+            message: `File imported ✅`,
+            variant: 'success',
+        });
     }
 
     const handleDragEnd = (event) => {
@@ -103,20 +116,24 @@ function FileTree() {
     }
 
     return (
-        <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-            <div>
-                <ButtonGroup size="sm" className="w-100 mb-2">
-                    <Button className="me-1" onClick={async() => await handleCreate(false)}>+ File</Button>
-                    <Button className="me-1" onClick={async() => await handleCreate(true)}>+ Folder</Button>
-                </ButtonGroup>
-                <Button variant="outline-success" size="sm" className="w-100 mb-2" onClick={handleImportClick}>Import .md</Button>
-                <input type="file" ref={fileInputRef} style={{ display: 'none' }} onChange={handleFileImport} accept=".md" />
+        <>
+            <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+                <div>
+                    <ButtonGroup size="sm" className="w-100 mb-2">
+                        <Button className="me-1" onClick={async() => await handleCreate(false)}>+ File</Button>
+                        <Button className="me-1" onClick={async() => await handleCreate(true)}>+ Folder</Button>
+                    </ButtonGroup>
+                    <Button variant="outline-success" size="sm" className="w-100 mb-2" onClick={handleImportClick}>Import .md</Button>
+                    <input type="file" ref={fileInputRef} style={{ display: 'none' }} onChange={handleFileImport} accept=".md" />
 
-                <div className="d-flex overflow-auto" style={{ whiteSpace: 'nowrap',  padding: '10px' }}>
-                    <FileTreeItem entryId="root" selectedId={selectedId} setSelectedId={setSelectedId} />
+                    <div className="d-flex overflow-auto" style={{ whiteSpace: 'nowrap',  padding: '10px' }}>
+                        <FileTreeItem entryId="root" selectedId={selectedId} setSelectedId={setSelectedId} />
+                    </div>
                 </div>
-            </div>
-        </DndContext>
+            </DndContext>
+
+            <ShowToast setToast={setToast} toast={toast}/>
+        </>
     );
 }
 

@@ -1,8 +1,10 @@
 import { useSelector, useDispatch } from 'react-redux';
-import { Container, Row, Col, Card, Button } from 'react-bootstrap';
+import {Container, Row, Col, Card, Button} from 'react-bootstrap';
 import ImageUploader from '../images/ImageUploader';
 import { deleteImage, renameImage } from '../../features/imagesSlice';
 import Swal from "sweetalert2";
+import {handleExportAll, handleExportOne} from "../utils/exportFile.js";
+
 
 function ImageLibraryPage() {
     const dispatch = useDispatch();
@@ -28,6 +30,7 @@ function ImageLibraryPage() {
             title: `New name for the image`,
             input: 'text',
             inputPlaceholder: 'cat.jpg',
+            inputValue: oldName,
             showCancelButton: true,
             cancelButtonText: 'Cancel',
             confirmButtonText: 'Rename',
@@ -43,7 +46,12 @@ function ImageLibraryPage() {
 
     return (
         <Container className="mt-4">
-            <h2>Image Library</h2>
+            <div className="d-flex justify-content-between align-items-center mb-3" style={{ whiteSpace: 'nowrap' }}>
+                <h2>Image Library</h2>
+                <Button variant="outline-primary" size="lg" onClick={() => handleExportAll(images)}>
+                    Export All
+                </Button>
+            </div>
             <ImageUploader />
 
             <hr />
@@ -68,16 +76,21 @@ function ImageLibraryPage() {
                                     <Button
                                         variant="primary"
                                         size="sm"
+                                        className="me-1"
                                         onClick={async() => await handleRename(img.id, img.name)}
                                     >
-                                        Renombrar
-                                    </Button>{' '}
+                                        Rename
+                                    </Button>
                                     <Button
                                         variant="danger"
                                         size="sm"
+                                        className="me-1"
                                         onClick={async() => await handleDelete(img.id)}
                                     >
-                                        Eliminar
+                                        Delete
+                                    </Button>
+                                    <Button variant="info" size="sm" onClick={() => handleExportOne(img)}>
+                                        Export
                                     </Button>
                                 </Card.Body>
                             </Card>

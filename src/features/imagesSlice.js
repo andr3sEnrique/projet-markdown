@@ -28,8 +28,11 @@ export const imagesSlice = createSlice({
                 state.items[id].name = newName;
             }
         },
+        importImages: (state, action) => {
+            Object.assign(state.items, action.payload);
+        },
     },
 });
 
-export const { addImage, deleteImage, renameImage } = imagesSlice.actions;
+export const { addImage, deleteImage, renameImage, importImages } = imagesSlice.actions;
 export default imagesSlice.reducer;
