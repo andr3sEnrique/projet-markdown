@@ -2,7 +2,7 @@ import { Container, Nav, Navbar } from "react-bootstrap";
 import { Link, Route, Routes } from "react-router-dom";
 import EditorPage from "./components/pages/EditorPage";
 import ImageLibraryPage from "./components/pages/ImageLibraryPage.jsx";
-import BlockLibraryPage from "./components/Block/BlockLibraryPage.jsx";
+import BlockLibraryPage from "./components/pages/BlockLibraryPage.jsx";
 
 function App() {
   return (
