@@ -1,9 +1,28 @@
-import { Container, Row, Col } from 'react-bootstrap';
+import {Container, Row, Col, Button} from 'react-bootstrap';
 import FileTree from '../../components/FileTree';
 import MarkdownEditor from '../../components/MarkdownEditor';
 import MarkdownPreview from '../../components/MarkdownPreview';
+import {useSelector} from "react-redux";
+
+const downloadFile = (filename, content) => {
+    const element = document.createElement('a');
+    const file = new Blob([content], { type: 'text/markdown' });
+    element.href = URL.createObjectURL(file);
+    element.download = filename;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+}
 
 function EditorPage() {
+    const { tree, currentFileId } = useSelector((state) => state.files);
+    const currentFile = currentFileId ? tree[currentFileId] : null;
+
+    const handleExport = () => {
+        if (currentFile && !currentFile.isFolder) {
+            downloadFile(currentFile.name, currentFile.content);
+        }
+    }
     return (
         <Container fluid>
             <Row>
@@ -15,7 +34,12 @@ function EditorPage() {
                 <Col md={9}>
                     <Row>
                         <Col md={6} style={{ height: '90vh' }}>
-                            <h4 className="mt-2">Editor</h4>
+                            <div className="d-flex flex-column justify-content-center align-items-center">
+                                <h4 className="mt-2">Editor</h4>
+                                <Button variant="outline-primary" className="mb-1" size="sm" onClick={handleExport} disabled={!currentFile || currentFile.isFolder}>
+                                    Export .md
+                                </Button>
+                            </div>
                             <MarkdownEditor />
                         </Col>
 
