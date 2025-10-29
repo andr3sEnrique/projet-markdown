@@ -1,6 +1,7 @@
 import {Container, Nav, Navbar} from "react-bootstrap";
-import {Route, Routes} from "react-router-dom";
+import {Link, Route, Routes} from "react-router-dom";
 import EditorPage from './components/pages/EditorPage';
+import ImageLibraryPage from "./components/pages/ImageLibraryPage.jsx";
 
 function App() {
     return (
@@ -15,13 +16,13 @@ function App() {
 
                     <Navbar.Collapse id="basic-navbar-nav">
                         <Nav className="me-auto">
-                            <Nav.Link to="/">
+                            <Nav.Link as={Link} to="/">
                                 Editor
                             </Nav.Link>
-                            <Nav.Link to="/blocs">
+                            <Nav.Link as={Link} to="/blocs">
                                 Blocs
                             </Nav.Link>
-                            <Nav.Link to="/images">
+                            <Nav.Link as={Link} to="/images">
                                 Images
                             </Nav.Link>
                         </Nav>
@@ -32,6 +33,7 @@ function App() {
             <Container className="mt-4">
                 <Routes>
                     <Route path="/" element={<EditorPage />} />
+                    <Route path="/images" element={<ImageLibraryPage />} />
                 </Routes>
             </Container>
         </>

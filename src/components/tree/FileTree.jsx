@@ -40,7 +40,6 @@ function FileTree() {
                 if (!value) return 'It can not be empty';
             },
         });
-        console.log(name);
 
 
         if (name) {
