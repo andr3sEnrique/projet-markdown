@@ -1,6 +1,6 @@
 import { useSelector, useDispatch } from 'react-redux';
 import { Form } from 'react-bootstrap';
-import { updateFileContent } from '../features/filesSlice';
+import { updateFileContent } from '../../features/filesSlice.js';
 
 function MarkdownEditor() {
     const { tree, currentFileId } = useSelector((state) => state.files);

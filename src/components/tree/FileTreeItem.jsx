@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { ListGroup, Button, Form, InputGroup, Collapse } from 'react-bootstrap';
-import { setCurrentFile, deleteEntry, renameEntry } from '../features/filesSlice';
+import { setCurrentFile, deleteEntry, renameEntry } from '../../features/filesSlice.js';
+import {useDnd} from "./hooks/dndHook.js";
 
 function FileTreeItem({ entryId, selectedId, setSelectedId }) {
     const dispatch = useDispatch();
@@ -12,6 +13,7 @@ function FileTreeItem({ entryId, selectedId, setSelectedId }) {
     const [newName, setNewName] = useState(entry.name);
 
     const [isOpen, setIsOpen] = useState(true);
+    const { setNodeRef, transform, isDragging, isOver, attributes, listeners } = useDnd({ entry });
 
     if (!entry) return null;
 
@@ -45,20 +47,26 @@ function FileTreeItem({ entryId, selectedId, setSelectedId }) {
         setNewName(e.target.value);
     };
 
+    const dndStyles = {
+        transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
+        opacity: isDragging ? 0.5 : 1,
+        backgroundColor: isOver ? '#d0e3ff' : (entry.id === selectedId ? '#e7f1ff' : 'transparent'),
+        cursor: 'pointer',
+    }
+
     return (
         <div className='d-flex flex-column'>
             <ListGroup.Item
-
+                ref={setNodeRef}
                 active={entry.id === currentFileId}
                 onClick={handleSelect}
-                style={{
-                    cursor: 'pointer',
-                    backgroundColor: entry.id === selectedId ? '#e7f1ff' : 'transparent'
-                }}
+                style={dndStyles}
+                {...attributes}
+                {...listeners}
                 className="d-flex justify-content-between align-items-center"
             >
                 {isRenaming ? (
-                    <InputGroup size="sm" onClick={(e) => e.stopPropagation()}>
+                    <InputGroup size="sm" onClick={(e) => e.stopPropagation()} {...listeners} {...attributes}>
                         <Form.Control
                             value={newName}
                             onChange={handleRenameChange}

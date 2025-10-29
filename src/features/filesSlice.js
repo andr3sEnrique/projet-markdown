@@ -69,6 +69,27 @@ export const filesSlice = createSlice({
 
             parent.children.push(newId);
         },
+        moveEntry: (state, action) => {
+          const { entryId, newParentId } = action.payload;
+          const entry = state.tree[entryId];
+          const newParent = state.tree[newParentId];
+          if (!entry || !newParent || !newParent.isFolder) {
+            console.error("The entry or the new parent is not a folder or does not exist.");
+            return;
+          }
+            if (entryId === newParentId) return;
+            if (entryId === 'root') return;
+            const oldParent = Object.values(state.tree).find((e) => e.isFolder && e.children.includes(entryId));
+            if (!oldParent) {
+                console.error("Failed to find the old parent of the entry.");
+                return;
+            }
+            oldParent.children = oldParent.children.filter(id => id !== entryId);
+            newParent.children.push(entryId);
+            console.log(
+              `Entry ${entryId} moved from ${oldParent.id} to ${newParent.id}`
+            )
+        },
 
         deleteEntry: (state, action) => {
             const { entryId } = action.payload;
@@ -99,6 +120,7 @@ export const filesSlice = createSlice({
 export const {
     setCurrentFile,
     updateFileContent,
+    moveEntry,
     createEntry,
     deleteEntry,
     renameEntry

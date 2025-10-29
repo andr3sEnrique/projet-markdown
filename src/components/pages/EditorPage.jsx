@@ -1,7 +1,7 @@
 import {Container, Row, Col, Button} from 'react-bootstrap';
-import FileTree from '../../components/FileTree';
-import MarkdownEditor from '../../components/MarkdownEditor';
-import MarkdownPreview from '../../components/MarkdownPreview';
+import FileTree from '../tree/FileTree.jsx';
+import MarkdownEditor from '../markdown/MarkdownEditor.jsx';
+import MarkdownPreview from '../markdown/MarkdownPreview.jsx';
 import {useSelector} from "react-redux";
 
 const downloadFile = (filename, content) => {

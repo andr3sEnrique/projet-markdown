@@ -1,8 +1,14 @@
 import { useSelector, useDispatch } from 'react-redux';
 import {Button, ButtonGroup} from 'react-bootstrap';
-import {createEntry} from '../features/filesSlice';
-import FileTreeItem from './FileTreeItem';
+import { createEntry, moveEntry } from '../../features/filesSlice.js';
+import FileTreeItem from './FileTreeItem.jsx';
 import { useState, useRef } from 'react';
+import {
+    DndContext,
+    PointerSensor,
+    useSensor,
+    useSensors
+} from '@dnd-kit/core';
 import Swal from 'sweetalert2'
 
 function FileTree() {
@@ -10,6 +16,12 @@ function FileTree() {
     const dispatch = useDispatch();
     const [selectedId, setSelectedId] = useState('root');
     const fileInputRef = useRef(null);
+
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: { distance: 8 },
+        })
+    );
 
     const handleCreate = async(isFolder) => {
         const parentId = getParentId(selectedId);
@@ -76,19 +88,36 @@ function FileTree() {
         e.target.value = null;
     }
 
-    return (
-        <div>
-            <ButtonGroup size="sm" className="w-100 mb-2">
-                <Button className="me-1" onClick={async() => await handleCreate(false)}>+ File</Button>
-                <Button className="me-1" onClick={async() => await handleCreate(true)}>+ Folder</Button>
-            </ButtonGroup>
-            <Button variant="outline-success" size="sm" className="w-100 mb-2" onClick={handleImportClick}>Import .md</Button>
-            <input type="file" ref={fileInputRef} style={{ display: 'none' }} onChange={handleFileImport} accept=".md" />
+    const handleDragEnd = (event) => {
+        const { over, active } = event;
+        if (!over) return;
+        if (active.id === over.id) return;
 
-            <div className="d-flex overflow-auto" style={{ whiteSpace: 'nowrap',  padding: '10px' }}>
-                <FileTreeItem entryId="root" selectedId={selectedId} setSelectedId={setSelectedId} />
+        const entryId = active.id;
+        const newParentId = over.id;
+
+        if (tree[newParentId] && tree[newParentId].isFolder) {
+            dispatch(moveEntry({ entryId, newParentId }));
+        } else {
+            console.warn("The destination is not a folder.");
+        }
+    }
+
+    return (
+        <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+            <div>
+                <ButtonGroup size="sm" className="w-100 mb-2">
+                    <Button className="me-1" onClick={async() => await handleCreate(false)}>+ File</Button>
+                    <Button className="me-1" onClick={async() => await handleCreate(true)}>+ Folder</Button>
+                </ButtonGroup>
+                <Button variant="outline-success" size="sm" className="w-100 mb-2" onClick={handleImportClick}>Import .md</Button>
+                <input type="file" ref={fileInputRef} style={{ display: 'none' }} onChange={handleFileImport} accept=".md" />
+
+                <div className="d-flex overflow-auto" style={{ whiteSpace: 'nowrap',  padding: '10px' }}>
+                    <FileTreeItem entryId="root" selectedId={selectedId} setSelectedId={setSelectedId} />
+                </div>
             </div>
-        </div>
+        </DndContext>
     );
 }
 
