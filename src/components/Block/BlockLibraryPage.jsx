@@ -2,9 +2,10 @@ import { useState, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Container, Row, Col, Form, Button, Card, ListGroup, ButtonGroup } from "react-bootstrap";
 import { addBlock, updateBlock, deleteBlock, importBlocks } from "../../features/blocksSlice";
-import {handleExportAll, handleExportOne} from "../utils/exportFile.js";
 import Swal from "sweetalert2";
 import ShowToast from "../utils/ShowToast.jsx";
+import {handleRequestExport} from "../utils/exportFile.js";
+import {handleImportFile} from "../utils/importFile.js";
 
 function BlockLibraryPage() {
   const dispatch = useDispatch();
@@ -42,6 +43,28 @@ function BlockLibraryPage() {
     });
 
     handleClear();
+  };
+
+  const dispatchBlockLogic = (file, data) => {
+    if (file.name.endsWith(".parts.mdlc")) {
+      dispatch(importBlocks(data));
+    } else if (file.name.endsWith(".part.mdlc")) {
+      dispatch(
+          addBlock({
+            name: data.name || "Imported",
+            content: data.content || "",
+            shortcut: data.shortcut || "",
+          })
+      );
+    } else {
+      setToast({
+        show: true,
+        message: `Format not recognized. Use .part.mdlc or .parts.mdlc`,
+        variant: 'warning',
+      });
+      return false;
+    }
+    return true;
   };
 
   const handleEdit = (block) => {
@@ -102,50 +125,6 @@ function BlockLibraryPage() {
     fileInputRef.current.click();
   };
 
-  const handleImportFile = (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const data = JSON.parse(e.target.result);
-
-        if (file.name.endsWith(".parts.mdlc")) {
-          dispatch(importBlocks(data));
-        } else if (file.name.endsWith(".part.mdlc")) {
-          dispatch(
-            addBlock({
-              name: data.name || "Imported",
-              content: data.content || "",
-              shortcut: data.shortcut || "",
-            })
-          );
-        } else {
-          setToast({
-            show: true,
-            message: `Format not recognized. Use .part.mdlc or .parts.mdlc`,
-            variant: 'warning',
-          });
-        }
-      } catch (err) {
-        console.error("Error al importar el archivo", err);
-        setToast({
-          show: true,
-          message: "File is corrupted or not a valid JSON.",
-          variant: 'error'
-        })
-      }
-      setToast({
-        show: true,
-        message: `File imported ✅`,
-        variant: 'success',
-      });
-    };
-    reader.readAsText(file);
-    event.target.value = null;
-  };
-
   return (
     <>
       <Container className="mt-4">
@@ -188,15 +167,15 @@ function BlockLibraryPage() {
 
           <Col md={7}>
             <h4>Saved Blocks</h4>
-            <ButtonGroup>
+            <ButtonGroup className="mb-1">
               <Button variant="success" className="me-1" size="sm" onClick={handleImportClick}>
                 Import
               </Button>
-              <Button variant="primary" size="sm" onClick={() => handleExportAll(blocks)}>
+              <Button variant="primary" size="sm" onClick={async() => handleRequestExport('all-blocks.parts.mdlc', blocks)}>
                 Export All
               </Button>
             </ButtonGroup>
-            <input type="file" ref={fileInputRef} onChange={handleImportFile} accept=".mdlc" style={{ display: "none" }} />
+            <input type="file" ref={fileInputRef} onChange={(event) => handleImportFile(event, dispatchBlockLogic, setToast)} accept=".mdlc" style={{ display: "none" }} />
             <ListGroup>
               {blockList.length > 0 ? (
                   blockList.map((block) => (
@@ -212,7 +191,7 @@ function BlockLibraryPage() {
                         <Button variant="outline-danger" className="me-1" size="sm" onClick={async() => await handleDelete(block.id)}>
                           Delete
                         </Button>
-                        <Button variant="info" size="sm" onClick={() => handleExportOne(block)}>
+                        <Button variant="info" size="sm" onClick={async() => handleRequestExport(`block-${block.name}.part.mdlc`, block)}>
                           Export
                         </Button>
                       </ListGroup.Item>

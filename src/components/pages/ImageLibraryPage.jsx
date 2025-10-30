@@ -3,7 +3,7 @@ import {Container, Row, Col, Card, Button} from 'react-bootstrap';
 import ImageUploader from '../images/ImageUploader';
 import { deleteImage, renameImage } from '../../features/imagesSlice';
 import Swal from "sweetalert2";
-import {handleExportAll, handleExportOne} from "../utils/exportFile.js";
+import {handleRequestExport} from "../utils/exportFile.js";
 
 
 function ImageLibraryPage() {
@@ -48,7 +48,7 @@ function ImageLibraryPage() {
         <Container className="mt-4">
             <div className="d-flex justify-content-between align-items-center mb-3" style={{ whiteSpace: 'nowrap' }}>
                 <h2>Image Library</h2>
-                <Button variant="outline-primary" size="lg" onClick={() => handleExportAll(images)}>
+                <Button variant="outline-primary" size="lg" onClick={async () => handleRequestExport(`all-images.parts.mdlc`, images)}>
                     Export All
                 </Button>
             </div>
@@ -89,7 +89,7 @@ function ImageLibraryPage() {
                                     >
                                         Delete
                                     </Button>
-                                    <Button variant="info" size="sm" onClick={() => handleExportOne(img)}>
+                                    <Button variant="info" size="sm" onClick={async() => handleRequestExport(`image-${img.name}.part.mdlc`, img)}>
                                         Export
                                     </Button>
                                 </Card.Body>
