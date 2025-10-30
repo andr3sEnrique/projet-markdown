@@ -8,6 +8,7 @@ import ImageSelectorModal from "../images/ImageSelectorModal.jsx";
 import { resolveImageRefs } from "../utils/imageResolver.js";
 import BlockSelectorModal from "../Block/BlockSelectorModal.jsx";
 import { useIsMobile } from "./hooks/useIsMobile.jsx";
+import { selectCurrentProfil } from "../../features/profilsSlice.js";
 
 const downloadFile = (filename, content) => {
   const element = document.createElement("a");
@@ -21,6 +22,7 @@ const downloadFile = (filename, content) => {
 
 function EditorPage() {
   const { tree, currentFileId } = useSelector((state) => state.files);
+  const activeProfil = useSelector(selectCurrentProfil);
   const images = useSelector((state) => state.images.items);
   const currentFile = currentFileId ? tree[currentFileId] : null;
   const [showImageModal, setShowImageModal] = useState(false);
@@ -62,7 +64,7 @@ function EditorPage() {
             <Col md={3} style={{ borderRight: isMobile ? "" : "1px solid #ddd", height: isMobile ? "auto" : "90vh" }}>
               <span>
                 <h4 className="mt-2" onClick={isMobile ? toggleBrowser : undefined}>
-                  {isMobile ? (showBrowser ? "Browser ▴" : "Browser ▾") : "Browser"}
+                  {isMobile ? (showBrowser ? "Browser ▴" : "Browser ▾") : "Browser"} {activeProfil ? `( ${activeProfil.name} )` : ""}
                 </h4>
               </span>
               <FileTree />

@@ -10,13 +10,14 @@ export const blocksSlice = createSlice({
   initialState,
   reducers: {
     addBlock: (state, action) => {
-      const { name, content, shortcut } = action.payload;
+      const { name, content, shortcut, linkedProfil } = action.payload;
       const newId = uuidv4();
       state.items[newId] = {
         id: newId,
         name: name,
         content: content,
         shortcut: shortcut || "",
+        linkedProfil: linkedProfil || null,
       };
     },
 

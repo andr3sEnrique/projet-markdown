@@ -1,13 +1,22 @@
 import { useSelector } from "react-redux";
 import { Modal, Button, ListGroup } from "react-bootstrap";
+import { useMemo } from "react";
+import { selectCurrentProfil } from "../../features/profilsSlice";
 
 function BlockSelectorModal({ show, onHide, onInsert }) {
   const blocks = useSelector((state) => state.blocks.items);
-  const blockList = Object.values(blocks);
+  const activeProfil = useSelector(selectCurrentProfil);
+  const blockList = useMemo(() => {
+    const allBlocks = Object.values(blocks || {});
+    if (activeProfil) {
+      return allBlocks.filter((block) => block.linkedProfil === activeProfil.id);
+    }
+    return allBlocks.filter((block) => !block.linkedProfil);
+  }, [blocks, activeProfil]);
 
   const handleBlockClick = (block) => {
-    onInsert(block.content); // Llama a la función de inserción
-    onHide(); // Cierra el modal
+    onInsert(block.content);
+    onHide();
   };
 
   return (

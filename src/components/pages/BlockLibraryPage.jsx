@@ -1,21 +1,30 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Container, Row, Col, Form, Button, Card, ListGroup, ButtonGroup } from "react-bootstrap";
 import { addBlock, updateBlock, deleteBlock, importBlocks } from "../../features/blocksSlice.js";
 import { handleExportAll, handleExportOne } from "../utils/exportFile.js";
 import Swal from "sweetalert2";
 import ShowToast from "../utils/ShowToast.jsx";
+import { selectCurrentProfil } from "../../features/profilsSlice.js";
 
 function BlockLibraryPage() {
   const dispatch = useDispatch();
   const blocks = useSelector((state) => state.blocks.items);
-  const blockList = Object.values(blocks);
+  const activeProfil = useSelector(selectCurrentProfil);
   const fileInputRef = useRef(null);
   const [toast, setToast] = useState({ show: false, message: "", variant: "success" });
   const [name, setName] = useState("");
   const [content, setContent] = useState("");
   const [shortcut, setShortcut] = useState("");
   const [editingId, setEditingId] = useState(null);
+
+  const blockList = useMemo(() => {
+    const allBlocks = Object.values(blocks || {});
+    if (activeProfil) {
+      return allBlocks.filter((block) => block.linkedProfil === activeProfil.id);
+    }
+    return allBlocks.filter((block) => !block.linkedProfil);
+  }, [blocks, activeProfil]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -28,11 +37,11 @@ function BlockLibraryPage() {
       });
       return;
     }
-
+    const linkedProfil = activeProfil?.id || null;
     if (editingId) {
       dispatch(updateBlock({ id: editingId, name, content, shortcut }));
     } else {
-      dispatch(addBlock({ name, content, shortcut }));
+      dispatch(addBlock({ name, content, shortcut, linkedProfil }));
     }
 
     setToast({
@@ -187,7 +196,7 @@ function BlockLibraryPage() {
           </Col>
 
           <Col md={7}>
-            <h4>Saved Blocks</h4>
+            <h4>Saved Blocks {activeProfil ? `( ${activeProfil.name} )` : ""}</h4>
             <ButtonGroup>
               <Button variant="success" className="me-1" size="sm" onClick={handleImportClick}>
                 Import

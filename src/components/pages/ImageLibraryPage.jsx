@@ -4,11 +4,20 @@ import ImageUploader from "../images/ImageUploader";
 import { deleteImage, renameImage } from "../../features/imagesSlice";
 import Swal from "sweetalert2";
 import { handleExportAll, handleExportOne } from "../utils/exportFile.js";
+import { selectCurrentProfil } from "../../features/profilsSlice.js";
+import { useMemo } from "react";
 
 function ImageLibraryPage() {
   const dispatch = useDispatch();
   const images = useSelector((state) => state.images.items);
-  const imageList = Object.values(images);
+  const activeProfil = useSelector(selectCurrentProfil);
+  const imageList = useMemo(() => {
+    const allImages = Object.values(images || {});
+    if (activeProfil) {
+      return allImages.filter((image) => image.linkedProfil === activeProfil.id);
+    }
+    return allImages.filter((image) => !image.linkedProfil);
+  });
 
   const handleDelete = async (id) => {
     const result = await Swal.fire({
@@ -55,7 +64,7 @@ function ImageLibraryPage() {
 
       <hr />
 
-      <h4>Saved Images</h4>
+      <h4>Saved Images {activeProfil ? `( ${activeProfil.name} )` : ""}</h4>
       <Row>
         {imageList.length > 0 ? (
           imageList.map((img) => (

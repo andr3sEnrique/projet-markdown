@@ -3,6 +3,8 @@ import { Link, Route, Routes } from "react-router-dom";
 import EditorPage from "./components/pages/EditorPage";
 import ImageLibraryPage from "./components/pages/ImageLibraryPage.jsx";
 import BlockLibraryPage from "./components/pages/BlockLibraryPage.jsx";
+import ProfilPage from "./components/pages/ProfilsPage.jsx";
+import NotFoundPage from "./components/pages/NotFoundPage.jsx";
 
 function App() {
   return (
@@ -24,6 +26,9 @@ function App() {
               <Nav.Link as={Link} to="/images">
                 Images
               </Nav.Link>
+              <Nav.Link as={Link} to="/profils">
+                Profils
+              </Nav.Link>
             </Nav>
           </Navbar.Collapse>
         </Container>
@@ -34,6 +39,8 @@ function App() {
           <Route path="/" element={<EditorPage />} />
           <Route path="/blocs" element={<BlockLibraryPage />} />
           <Route path="/images" element={<ImageLibraryPage />} />
+          <Route path="/profils" element={<ProfilPage />} />
+          <Route path="/*" element={<NotFoundPage />} />
         </Routes>
       </Container>
     </>
