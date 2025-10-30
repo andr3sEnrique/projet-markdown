@@ -72,13 +72,11 @@ function MarkdownEditor({ onInsertText }) {
 
   const handleKeyDown = (event) => {
     console.log(blocks);
-    // Itera sobre todos los bloques
     for (const block of Object.values(blocks)) {
       if (isShortcutMatch(block.shortcut, event)) {
         console.log("match");
-        // ¡Coincidencia!
-        event.preventDefault(); // Evita la acción del navegador
-        insertText(block.content); // Inserta el contenido
+        event.preventDefault();
+        insertText(block.content);
         return;
       }
     }

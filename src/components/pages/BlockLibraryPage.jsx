@@ -60,8 +60,8 @@ function BlockLibraryPage() {
 
   const handleDelete = async (id) => {
     const result = await Swal.fire({
-      title: `¿Are you sure you want to delete this block ?`,
-      text: "¡You cannot undo this!",
+      title: `Are you sure you want to delete this block ?`,
+      text: "You cannot undo this!",
       icon: "warning",
       showCancelButton: true,
       confirmButtonText: "Delete",
@@ -129,7 +129,7 @@ function BlockLibraryPage() {
           });
         }
       } catch (err) {
-        console.error("Error al importar el archivo", err);
+        console.error("Error importing the file", err);
         setToast({
           show: true,
           message: "File is corrupted or not a valid JSON.",
@@ -159,7 +159,7 @@ function BlockLibraryPage() {
                 <Form onSubmit={handleSubmit}>
                   <Form.Group className="mb-3">
                     <Form.Label>Block name</Form.Label>
-                    <Form.Control type="text" placeholder="Ej: Alerta Info" value={name} onChange={(e) => setName(e.target.value)} required />
+                    <Form.Control type="text" placeholder="Ex: Alert Info" value={name} onChange={(e) => setName(e.target.value)} required />
                   </Form.Group>
 
                   <Form.Group className="mb-3">
@@ -169,8 +169,8 @@ function BlockLibraryPage() {
 
                   <Form.Group className="mb-3">
                     <Form.Label>Shortcut</Form.Label>
-                    <Form.Control type="text" placeholder="Ej: Ctrl+1" value={shortcut} onChange={(e) => setShortcut(e.target.value)} onKeyDown={handleShortcutKeyDown} />
-                    <Form.Text>Define a shortcut (ej: Ctrl+1, Alt+B)</Form.Text>
+                    <Form.Control type="text" placeholder="Ex: Ctrl+1" value={shortcut} onChange={(e) => setShortcut(e.target.value)} onKeyDown={handleShortcutKeyDown} />
+                    <Form.Text>Define a shortcut (ex: Ctrl+1, Alt+B)</Form.Text>
                   </Form.Group>
 
                   <Button variant="primary" type="submit">

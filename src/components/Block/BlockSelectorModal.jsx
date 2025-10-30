@@ -13,7 +13,7 @@ function BlockSelectorModal({ show, onHide, onInsert }) {
   return (
     <Modal show={show} onHide={onHide} size="lg">
       <Modal.Header closeButton>
-        <Modal.Title>Seleccionar Bloque Personalizado</Modal.Title>
+        <Modal.Title>Select Custom Block</Modal.Title>
       </Modal.Header>
       <Modal.Body style={{ maxHeight: "60vh", overflowY: "auto" }}>
         <ListGroup>
@@ -22,19 +22,19 @@ function BlockSelectorModal({ show, onHide, onInsert }) {
               <ListGroup.Item action key={block.id} onClick={() => handleBlockClick(block)}>
                 <div className="d-flex justify-content-between">
                   <strong>{block.name}</strong>
-                  {block.shortcut && <small>Atajo: {block.shortcut}</small>}
+                  {block.shortcut && <small>Shortcut: {block.shortcut}</small>}
                 </div>
                 <pre style={{ fontSize: "0.8rem", maxHeight: "50px", overflow: "hidden", marginBottom: 0 }}>{block.content}</pre>
               </ListGroup.Item>
             ))
           ) : (
-            <p>No hay bloques personalizados. Ve a la pestaña "Bloques" para añadir.</p>
+            <p>There are no custom blocks. Go to the "Blocks" tab to add one.</p>
           )}
         </ListGroup>
       </Modal.Body>
       <Modal.Footer>
         <Button variant="secondary" onClick={onHide}>
-          Cerrar
+          Close
         </Button>
       </Modal.Footer>
     </Modal>

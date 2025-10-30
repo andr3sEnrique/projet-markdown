@@ -33,9 +33,6 @@ export const blocksSlice = createSlice({
     },
 
     importBlocks: (state, action) => {
-      // 'action.payload' debe ser un objeto 'items' (como el nuestro)
-      // Esto fusionará los bloques importados, sobrescribiendo
-      // los existentes si tienen el mismo ID (raro, pero posible).
       Object.assign(state.items, action.payload);
     },
   },
