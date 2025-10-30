@@ -2,6 +2,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { Form } from "react-bootstrap";
 import { updateFileContent } from "../../features/filesSlice.js";
 import { useEffect, useRef } from "react";
+import { useIsMobile } from "../pages/hooks/useIsMobile.jsx";
 
 const isShortcutMatch = (shortcut, event) => {
   if (!shortcut || !event) return false;
@@ -39,6 +40,7 @@ function MarkdownEditor({ onInsertText }) {
   const dispatch = useDispatch();
   const currentFile = tree[currentFileId];
   const textareaRef = useRef(null);
+  const isMobile = useIsMobile();
 
   const insertText = (markdownSyntax) => {
     if (!currentFile) return;
@@ -70,19 +72,17 @@ function MarkdownEditor({ onInsertText }) {
 
   const handleKeyDown = (event) => {
     console.log(blocks);
-    // Itera sobre todos los bloques
     for (const block of Object.values(blocks)) {
       if (isShortcutMatch(block.shortcut, event)) {
         console.log("match");
-        // ¡Coincidencia!
-        event.preventDefault(); // Evita la acción del navegador
-        insertText(block.content); // Inserta el contenido
+        event.preventDefault();
+        insertText(block.content);
         return;
       }
     }
   };
 
-  return <Form.Control as="textarea" ref={textareaRef} value={currentFile ? currentFile.content : "Select file..."} onChange={handleChange} disabled={!currentFile || currentFile.isFolder} style={{ height: "calc(100% - 40px)", resize: "none" }} onKeyDown={handleKeyDown} />;
+  return <Form.Control as="textarea" ref={textareaRef} value={currentFile ? currentFile.content : "Select file..."} onChange={handleChange} disabled={!currentFile || currentFile.isFolder} style={{ height: isMobile ? "70vh" : "calc(100% - 40px)", resize: "none" }} onKeyDown={handleKeyDown} />;
 }
 
 export default MarkdownEditor;

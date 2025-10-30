@@ -1,45 +1,54 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Container, Row, Col, Form, Button, Card, ListGroup, ButtonGroup } from "react-bootstrap";
-import { addBlock, updateBlock, deleteBlock, importBlocks } from "../../features/blocksSlice";
+import { addBlock, updateBlock, deleteBlock, importBlocks } from "../../features/blocksSlice.js";
 import Swal from "sweetalert2";
 import ShowToast from "../utils/ShowToast.jsx";
 import {handleRequestExport} from "../utils/exportFile.js";
 import {handleImportFile} from "../utils/importFile.js";
+import { selectCurrentProfil } from "../../features/profilsSlice.js";
 
 function BlockLibraryPage() {
   const dispatch = useDispatch();
   const blocks = useSelector((state) => state.blocks.items);
-  const blockList = Object.values(blocks);
+  const activeProfil = useSelector(selectCurrentProfil);
   const fileInputRef = useRef(null);
-  const [toast, setToast] = useState({ show: false, message: '', variant: 'success' });
+  const [toast, setToast] = useState({ show: false, message: "", variant: "success" });
   const [name, setName] = useState("");
   const [content, setContent] = useState("");
   const [shortcut, setShortcut] = useState("");
   const [editingId, setEditingId] = useState(null);
 
+  const blockList = useMemo(() => {
+    const allBlocks = Object.values(blocks || {});
+    if (activeProfil) {
+      return allBlocks.filter((block) => block.linkedProfil === activeProfil.id);
+    }
+    return allBlocks.filter((block) => !block.linkedProfil);
+  }, [blocks, activeProfil]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!name || !content) {
       Swal.fire({
-        icon: 'error',
-        title: 'Oops...',
-        text: 'Name and content are required. Please fill them and try again.',
-        footer: '<a href>Why do I have this issue?</a>'
+        icon: "error",
+        title: "Oops...",
+        text: "Name and content are required. Please fill them and try again.",
+        footer: "<a href>Why do I have this issue?</a>",
       });
       return;
     }
-
+    const linkedProfil = activeProfil?.id || null;
     if (editingId) {
       dispatch(updateBlock({ id: editingId, name, content, shortcut }));
     } else {
-      dispatch(addBlock({ name, content, shortcut }));
+      dispatch(addBlock({ name, content, shortcut, linkedProfil }));
     }
 
     setToast({
       show: true,
       message: `Block crated or updated ✅`,
-      variant: 'success',
+      variant: "success",
     });
 
     handleClear();
@@ -81,21 +90,21 @@ function BlockLibraryPage() {
     setShortcut("");
   };
 
-  const handleDelete = async(id) => {
+  const handleDelete = async (id) => {
     const result = await Swal.fire({
-      title: `¿Are you sure you want to delete this block ?`,
-      text: "¡You cannot undo this!",
-      icon: 'warning',
+      title: `Are you sure you want to delete this block ?`,
+      text: "You cannot undo this!",
+      icon: "warning",
       showCancelButton: true,
-      confirmButtonText: 'Delete',
-      cancelButtonText: 'Cancel',
+      confirmButtonText: "Delete",
+      cancelButtonText: "Cancel",
     });
     if (result.isConfirmed) {
       dispatch(deleteBlock({ id }));
       setToast({
         show: true,
         message: `Block deleted ✅`,
-        variant: 'success',
+        variant: "success",
       });
       if (id === editingId) {
         handleClear();
@@ -138,7 +147,7 @@ function BlockLibraryPage() {
                 <Form onSubmit={handleSubmit}>
                   <Form.Group className="mb-3">
                     <Form.Label>Block name</Form.Label>
-                    <Form.Control type="text" placeholder="Ej: Alerta Info" value={name} onChange={(e) => setName(e.target.value)} required />
+                    <Form.Control type="text" placeholder="Ex: Alert Info" value={name} onChange={(e) => setName(e.target.value)} required />
                   </Form.Group>
 
                   <Form.Group className="mb-3">
@@ -148,17 +157,17 @@ function BlockLibraryPage() {
 
                   <Form.Group className="mb-3">
                     <Form.Label>Shortcut</Form.Label>
-                    <Form.Control type="text" placeholder="Ej: Ctrl+1" value={shortcut} onChange={(e) => setShortcut(e.target.value)} onKeyDown={handleShortcutKeyDown} />
-                    <Form.Text>Define a shortcut (ej: Ctrl+1, Alt+B)</Form.Text>
+                    <Form.Control type="text" placeholder="Ex: Ctrl+1" value={shortcut} onChange={(e) => setShortcut(e.target.value)} onKeyDown={handleShortcutKeyDown} />
+                    <Form.Text>Define a shortcut (ex: Ctrl+1, Alt+B)</Form.Text>
                   </Form.Group>
 
                   <Button variant="primary" type="submit">
                     {editingId ? "Update Block" : "Save Block"}
                   </Button>
                   {editingId && (
-                      <Button variant="secondary" onClick={handleClear} className="ms-2">
-                        Cancel
-                      </Button>
+                    <Button variant="secondary" onClick={handleClear} className="ms-2">
+                      Cancel
+                    </Button>
                   )}
                 </Form>
               </Card.Body>
@@ -166,7 +175,7 @@ function BlockLibraryPage() {
           </Col>
 
           <Col md={7}>
-            <h4>Saved Blocks</h4>
+            <h4>Saved Blocks {activeProfil ? `( ${activeProfil.name} )` : ""}</h4>
             <ButtonGroup className="mb-1">
               <Button variant="success" className="me-1" size="sm" onClick={handleImportClick}>
                 Import
@@ -178,32 +187,32 @@ function BlockLibraryPage() {
             <input type="file" ref={fileInputRef} onChange={(event) => handleImportFile(event, dispatchBlockLogic, setToast)} accept=".mdlc" style={{ display: "none" }} />
             <ListGroup>
               {blockList.length > 0 ? (
-                  blockList.map((block) => (
-                      <ListGroup.Item key={block.id}>
-                        <h5>{block.name}</h5>
-                        <pre style={{ fontSize: "0.8rem", maxHeight: "50px", overflow: "hidden" }}>{block.content}</pre>
-                        <p className="mb-1">
-                          <strong>Shortcut:</strong> {block.shortcut || "None"}
-                        </p>
-                        <Button variant="outline-primary" className="me-1" size="sm" onClick={() => handleEdit(block)}>
-                          Edit
-                        </Button>
-                        <Button variant="outline-danger" className="me-1" size="sm" onClick={async() => await handleDelete(block.id)}>
-                          Delete
-                        </Button>
-                        <Button variant="info" size="sm" onClick={async() => handleRequestExport(`block-${block.name}.part.mdlc`, block)}>
-                          Export
-                        </Button>
-                      </ListGroup.Item>
-                  ))
+                blockList.map((block) => (
+                  <ListGroup.Item key={block.id}>
+                    <h5>{block.name}</h5>
+                    <pre style={{ fontSize: "0.8rem", maxHeight: "50px", overflow: "hidden" }}>{block.content}</pre>
+                    <p className="mb-1">
+                      <strong>Shortcut:</strong> {block.shortcut || "None"}
+                    </p>
+                    <Button variant="outline-primary" className="me-1" size="sm" onClick={() => handleEdit(block)}>
+                      Edit
+                    </Button>
+                    <Button variant="outline-danger" className="me-1" size="sm" onClick={async () => await handleDelete(block.id)}>
+                      Delete
+                    </Button>
+                    <Button variant="info" size="sm" onClick={async() => handleRequestExport(`block-${block.name}.part.mdlc`, block)}>
+                      Export
+                    </Button>
+                  </ListGroup.Item>
+                ))
               ) : (
-                  <p>There are no custom blocks.</p>
+                <p>There are no custom blocks.</p>
               )}
             </ListGroup>
           </Col>
         </Row>
       </Container>
-      <ShowToast setToast={setToast} toast={toast}/>
+      <ShowToast setToast={setToast} toast={toast} />
     </>
   );
 }

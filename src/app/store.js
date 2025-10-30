@@ -1,25 +1,30 @@
-import {configureStore} from "@reduxjs/toolkit";
+import { configureStore } from "@reduxjs/toolkit";
 import filesReducer from "../features/filesSlice";
 import blockReducer from "../features/blocksSlice";
 import imagesReducer from "../features/imagesSlice";
-import { loadState, saveState} from "./localStorage";
-import throttle from 'lodash.throttle';
+import profilsReducer from "../features/profilsSlice";
+import { loadState, saveState } from "./localStorage";
+import throttle from "lodash.throttle";
 
 const preloadedState = loadState();
 
 export const store = configureStore({
-    reducer: {
-        files: filesReducer,
-        blocks: blockReducer,
-        images: imagesReducer,
-    },
-    preloadedState: preloadedState,
+  reducer: {
+    files: filesReducer,
+    blocks: blockReducer,
+    images: imagesReducer,
+    profils: profilsReducer,
+  },
+  preloadedState: preloadedState,
 });
 
-store.subscribe(throttle(() => {
+store.subscribe(
+  throttle(() => {
     saveState({
-        files: store.getState().files,
-        blocks: store.getState().blocks,
-        images: store.getState().images,
+      files: store.getState().files,
+      blocks: store.getState().blocks,
+      images: store.getState().images,
+      profils: store.getState().profils,
     });
-}, 1000));
+  }, 1000)
+);

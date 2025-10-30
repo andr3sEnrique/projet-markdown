@@ -7,6 +7,8 @@ import { useSelector } from "react-redux";
 import ImageSelectorModal from "../images/ImageSelectorModal.jsx";
 import { resolveImageRefs } from "../utils/imageResolver.js";
 import BlockSelectorModal from "../Block/BlockSelectorModal.jsx";
+import { useIsMobile } from "./hooks/useIsMobile.jsx";
+import { selectCurrentProfil } from "../../features/profilsSlice.js";
 
 const downloadFile = (filename, content) => {
   const element = document.createElement("a");
@@ -20,11 +22,16 @@ const downloadFile = (filename, content) => {
 
 function EditorPage() {
   const { tree, currentFileId } = useSelector((state) => state.files);
+  const activeProfil = useSelector(selectCurrentProfil);
   const images = useSelector((state) => state.images.items);
   const currentFile = currentFileId ? tree[currentFileId] : null;
   const [showImageModal, setShowImageModal] = useState(false);
   const [showBlockModal, setShowBlockModal] = useState(false);
+  const [showBrowser, setshowBrowser] = useState(true);
+  const [showEditor, setShowEditor] = useState(true);
+  const [showPreview, setShowPreview] = useState(true);
   const insertTextRef = useRef(null);
+  const isMobile = useIsMobile();
 
   const handleExport = () => {
     if (currentFile && !currentFile.isFolder) {
@@ -45,39 +52,73 @@ function EditorPage() {
     }
   };
 
+  const toggleBrowser = () => setshowBrowser(!showBrowser);
+  const toggleEditor = () => setShowEditor(!showEditor);
+  const togglePreview = () => setShowPreview(!showPreview);
+
   return (
     <>
       <Container fluid>
         <Row>
-          <Col md={3} style={{ borderRight: "1px solid #ddd", height: "90vh" }}>
-            <h4 className="mt-2">Browser</h4>
-            <FileTree />
-          </Col>
+          {showBrowser ? (
+            <Col md={3} style={{ borderRight: isMobile ? "" : "1px solid #ddd", height: isMobile ? "auto" : "90vh" }}>
+              <span>
+                <h4 className="mt-2" onClick={isMobile ? toggleBrowser : undefined}>
+                  {isMobile ? (showBrowser ? "Browser ▴" : "Browser ▾") : "Browser"} {activeProfil ? `( ${activeProfil.name} )` : ""}
+                </h4>
+              </span>
+              <FileTree />
+            </Col>
+          ) : (
+            <span>
+              <h4 className="mt-2" onClick={isMobile ? toggleBrowser : undefined}>
+                {isMobile ? (showBrowser ? "Browser ▴" : "Browser ▾") : "Browser"}
+              </h4>
+            </span>
+          )}
 
           <Col md={9}>
-            <Row>
-              <Col md={6} style={{ height: "90vh" }}>
-                <div className="d-flex flex-column justify-content-center align-items-center">
-                  <h4 className="mt-2">Editor</h4>
-                  <div className="btn-group">
-                    <Button variant="outline-success" className="me-1" size="sm" onClick={() => setShowBlockModal(true)} disabled={!currentFile || currentFile.isFolder}>
-                      Insert Block
-                    </Button>
-                    <Button variant="outline-success" className="me-1" size="sm" onClick={() => setShowImageModal(true)} disabled={!currentFile || currentFile.isFolder}>
-                      Insert Image
-                    </Button>
-                    <Button variant="outline-primary" className="mb-1" size="sm" onClick={handleExport} disabled={!currentFile || currentFile.isFolder}>
-                      Export .md
-                    </Button>
+            <Row style={{ flexDirection: isMobile ? "column" : "row" }}>
+              {showEditor ? (
+                <Col md={6} style={{ height: isMobile ? "auto" : "90vh" }}>
+                  <div className="d-flex flex-column justify-content-center">
+                    <h4 className="mt-2" onClick={isMobile ? toggleEditor : undefined}>
+                      {isMobile ? (showEditor ? "Editor ▴" : "Editor ▾") : "Editor"}
+                    </h4>
+                    <div className="btn-group" style={{ marginBottom: "1vh" }}>
+                      <Button variant="outline-success" className="me-1" size="sm" onClick={() => setShowBlockModal(true)} disabled={!currentFile || currentFile.isFolder}>
+                        Insert Block
+                      </Button>
+                      <Button variant="outline-success" className="me-1" size="sm" onClick={() => setShowImageModal(true)} disabled={!currentFile || currentFile.isFolder}>
+                        Insert Image
+                      </Button>
+                      <Button variant="outline-primary" className="me-1" size="sm" onClick={handleExport} disabled={!currentFile || currentFile.isFolder}>
+                        Export .md
+                      </Button>
+                    </div>
                   </div>
+                  <MarkdownEditor onInsertText={insertTextRef} />
+                </Col>
+              ) : (
+                <div className="d-flex flex-column justify-content-center">
+                  <h4 className="mt-2" onClick={isMobile ? toggleEditor : undefined}>
+                    {isMobile ? (showEditor ? "Editor ▴" : "Editor ▾") : "Editor"}
+                  </h4>
                 </div>
-                <MarkdownEditor onInsertText={insertTextRef} />
-              </Col>
+              )}
 
-              <Col md={6} style={{ borderLeft: "1px solid #ddd", height: "90vh", overflowY: "auto" }}>
-                <h4 className="mt-2">Preview</h4>
-                <MarkdownPreview />
-              </Col>
+              {showPreview ? (
+                <Col md={6} style={{ borderLeft: isMobile ? "" : "1px solid #ddd", height: isMobile ? "auto" : "90vh", overflowY: "auto" }}>
+                  <h4 className="mt-2" onClick={isMobile ? togglePreview : undefined}>
+                    {isMobile ? (showEditor ? "Preview ▴" : "Preview ▾") : "Preview"}
+                  </h4>
+                  <MarkdownPreview />
+                </Col>
+              ) : (
+                <h4 className="mt-2" onClick={isMobile ? togglePreview : undefined}>
+                  {isMobile ? (showEditor ? "Preview ▴" : "Preview ▾") : "Preview"}
+                </h4>
+              )}
             </Row>
           </Col>
         </Row>
