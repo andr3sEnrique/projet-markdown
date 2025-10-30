@@ -58,6 +58,7 @@ export const handleImportFile = (event, dispatchCallBack, setToast) => {
             }
 
         }
+        console.log(success, file);
         if (success) {
             setToast({
                 show: true,
